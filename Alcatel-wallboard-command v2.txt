@@ -1,0 +1,62 @@
+ $XX - hexadecimal $FF=255DEC
+ 
+ ALCATEL WALLBOARD ASCII DECODER
+ 
+ $00 - none
+ $01 - /a
+ $02 - \a 
+ $03 - /\a
+ $04 - ||a
+ $05 - \e
+ $06 - /e 
+ $07 - /\e 
+ $08 - ||e
+ $09 - /i
+ $0A - /\i 
+ $0B - ||i
+ $0C - /o
+ $0D - /\o
+ $0E - ||o
+ $0F - \u
+ $10 - /u
+ $11 - /\u
+ $12 - ||u
+ $13 - /c
+ $14 - /n	
+ $15 - /0
+ $16 - /o
+ $17 - deutsch s
+ $18 - $1F space
+
+ $20- $7D - typical ASCII code
+ $7E - Euro char
+ $7F - full char
+ 
+ Command Code
+ 
+ $80 - red
+ $81 - light red
+ $82 - yellow
+ $83 - orange
+ $84 - bright
+ $85 - dimm low
+ $86 - global dimm lowest
+ $87 - green
+ $88 - blank 1 char after  $88$00$20-$88$1F$20 - cursor positioning (0-1F) with space before string - $88 cut a space char
+ $89 - #1 row
+ $8A - #2 row
+ $8B - stop blink
+ $8C - start blink
+ $8D - beep
+ $8E - reset screen
+ $8F - ignore after this sequence
+ 
+ $90-$FF - none
+
+example command (terminal 1.9b by Br@y++):
+
+$8E$8D$80$8C$88$03$20EXAMPLE$8B$87$88$171$8F produces: reset screen, beep, red, blink, position 3, "EXAMPLE",stop blink, green, position 23, "1", ignore after  
+ "   EXAMPLE      "
+ "      1         "
+
+
