@@ -1,17 +1,22 @@
 import serial
 import time
-
+import urllib2
+from urllib2 import Request
 class Lightboard:
 	rows = 2
 	cols = 16
 	device_address = "/dev/ttyUSB0"
 	message_file_address = "/home/odroid/Desktop/lightboard/message.txt"
+	url = "http://nice-idea.org/index.php/tablica/"
 	baud = 9600
 	timeout =1.0
+	pause_between_messages = 3.0
 	
 	_current_row = 0;
 	special_codes = ["<green>", "<red>", "<yellow>", "<orange>", "<light_red>", 
-					 "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>"]
+					 "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>", "<pause>"]
+	start_text_marker = "STARTTEXT"
+	stop_text_marker  = "STOPTEXT"
 	
 	def __init__(self):
 		self.ser = serial.Serial(self.device_address, self.baud, timeout=self.timeout)
@@ -93,42 +98,63 @@ class Lightboard:
 			date_str = time.strftime("%m-%d", time.gmtime())
 		elif code=="<endl>":
 			self._change_row_and_screen()
-		elif code =="<clear>":
+		elif code =="<clean>":
 			self.clean()
 			self._current_row=0
-			
-	def write_dynamic_text (self,  pause_beetween_words = 0.9, pause_between_messages = 3.0, print_to_stdout = False):
-		while 1:
-			with open(self.message_file_address) as f:
+		elif code =="<pause>":
+			time.sleep(self.pause_between_messages)
+
+	def get_text(self):
+		try:
+			req = Request(self.url)
+			content = urllib2.urlopen(req).read()
+			text_start_index = content.find(self.start_text_marker)+len(self.start_text_marker)
+			text_stop_index = content.find(self.stop_text_marker)
+			text = content[text_start_index:text_stop_index].replace('#', '<').replace('*', '>')
+			if len(text)>0:
+				storage_file = open(self.message_file_address, "w")
+				storage_file.write(text)
+				storage_file.close()
+			else:
+				raise ValueError('Got empty text from webpage')
+		except:
+			try:
+				f = open(self.message_file_address)
 				text = f.read()
-				splited_text = text.split()
-				letter_count=0
-				for i in range(len(splited_text)):
-					word = splited_text[i].strip()
-					if word in self.special_codes:
-						self._execute_special_code(word)
+			except:
+				text = "could not read file"
+		return text
+		
+	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
+		while 1:
+			text = self.get_text()
+			splited_text = text.split()
+			letter_count=0
+			for i in range(len(splited_text)):
+				word = splited_text[i].strip()
+				if word in self.special_codes:
+					self._execute_special_code(word)
+				else:
+					if len(word)<=16:
+						if letter_count + len(word)>16:
+							self._change_row_and_screen()
+							letter_count=0
+						if letter_count + len(word)<=16:
+							letter_count += len(word)
+							self.write_word(word)
+							#if print_to_stdout: print(word)
+							if letter_count < 16:
+								self.write_word(" ")
+								#if print_to_stdout: print(" ")
+								time.sleep(pause_beetween_words)
 					else:
-						if len(word)<=16:
-							if letter_count + len(word)>16:
-								self._change_row_and_screen()
-								letter_count=0
-							if letter_count + len(word)<=16:
-								letter_count += len(word)
-								self.write_word(word)
-								#if print_to_stdout: print(word)
-								if letter_count < 16:
-									self.write_word(" ")
-									#if print_to_stdout: print(" ")
-									time.sleep(pause_beetween_words)
-						else:
-							splited_text.pop(i)
-							part1 = word[:14]+"-"
-							part2 = word[15:]
-							splited_text.insert(i, part1)
-							splited_text.insert(i, part2)
+						splited_text.pop(i)
+						part1 = word[:14]+"-"
+						part2 = word[15:]
+						splited_text.insert(i, part1)
+						splited_text.insert(i, part2)
 						
-				time.sleep(pause_between_messages)
-				self.clean()
+			self.clean()
 
 if __name__ == "__main__":
 	l = Lightboard()

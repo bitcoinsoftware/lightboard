@@ -1,1 +1,1 @@
-<static> <red> INNOWACYJNE I PRAKTYCZNE PRACE DYPLOMOWE <green> <blink> NICE-IDEA.ORG
+ <clean> <static> <red> PRAKTYCZNE ORAZ CIEKAWE <clean> PRACE DYPLOMOWE <green> <blink> NICE-IDEA.ORG <pause> <clean> <orange> PRZEMYSLAW WIEWIORSKI ZEGNA OZIEBLE <pause> 
