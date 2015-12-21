@@ -1,4 +1,5 @@
 import serial
+import subprocess
 import time
 import urllib2
 from urllib2 import Request
@@ -8,6 +9,7 @@ class Lightboard:
 	device_address = "/dev/ttyUSB0"
 	message_file_address = "/home/odroid/Desktop/lightboard/message.txt"
 	url = "http://nice-idea.org/index.php/tablica/"
+	network_details_save_url = "/var/www/index.html"
 	baud = 9600
 	timeout =1.0
 	pause_between_messages = 3.0
@@ -125,8 +127,14 @@ class Lightboard:
 				text = "could not read file"
 		return text
 		
+	def save_network_details(self):
+		details = subprocess.Popen("ifconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+		with open(self.network_details_save_url, "w") as f:
+			f.write(str(details).replace("\n", "<br>"))
+		
 	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
 		while 1:
+			self.save_network_details()
 			text = self.get_text()
 			splited_text = text.split()
 			letter_count=0
@@ -142,10 +150,8 @@ class Lightboard:
 						if letter_count + len(word)<=16:
 							letter_count += len(word)
 							self.write_word(word)
-							#if print_to_stdout: print(word)
 							if letter_count < 16:
 								self.write_word(" ")
-								#if print_to_stdout: print(" ")
 								time.sleep(pause_beetween_words)
 					else:
 						splited_text.pop(i)
