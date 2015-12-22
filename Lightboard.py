@@ -128,7 +128,16 @@ class Lightboard:
 		return text
 		
 	def save_network_details(self):
-		details = subprocess.Popen("ifconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+		details =""
+		try:
+			details += subprocess.Popen("ifconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+		except:
+			pass
+		try:
+			details += subprocess.Popen("iwconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+		except:
+			pass
+			
 		with open(self.network_details_save_url, "w") as f:
 			f.write(str(details).replace("\n", "<br>"))
 		
