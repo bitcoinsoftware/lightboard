@@ -1,1 +1,1 @@
- <clean> <static> <red> PRAKTYCZNE ORAZ CIEKAWE <clean> PRACE DYPLOMOWE <green> <blink> NICE-IDEA.ORG <pause> <clean> <orange> PRZEMYSLAW WIEWIORSKI ZEGNA OZIEBLE <pause> 
+ <clean> <static> <red> PRAKTYCZNE ORAZ CIEKAWE <clean> PRACE DYPLOMOWE <green> <blink> NICE-IDEA.ORG <pause> <static> <clean> <red> Miejsce na inne informacje zwiazane z katedra <pause> <net_details> <pause> 

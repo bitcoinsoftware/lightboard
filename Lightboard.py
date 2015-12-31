@@ -3,6 +3,7 @@ import subprocess
 import time
 import urllib2
 from urllib2 import Request
+
 class Lightboard:
 	rows = 2
 	cols = 16
@@ -15,7 +16,7 @@ class Lightboard:
 	pause_between_messages = 3.0
 	
 	_current_row = 0;
-	special_codes = ["<green>", "<red>", "<yellow>", "<orange>", "<light_red>", 
+	special_codes = ["<green>", "<red>", "<yellow>", "<orange>", "<light_red>", "<net_details>",
 					 "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>", "<pause>"]
 	start_text_marker = "STARTTEXT"
 	stop_text_marker  = "STOPTEXT"
@@ -105,8 +106,10 @@ class Lightboard:
 			self._current_row=0
 		elif code =="<pause>":
 			time.sleep(self.pause_between_messages)
+		elif code =="<net_details>":
+			pass # already executed in main loop
 
-	def get_text(self):
+	def get_text(self):		
 		try:
 			req = Request(self.url)
 			content = urllib2.urlopen(req).read()
@@ -120,6 +123,7 @@ class Lightboard:
 			else:
 				raise ValueError('Got empty text from webpage')
 		except:
+			print "connection problem"
 			try:
 				f = open(self.message_file_address)
 				text = f.read()
@@ -130,21 +134,37 @@ class Lightboard:
 	def save_network_details(self):
 		details =""
 		try:
-			details += subprocess.Popen("ifconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+			det = subprocess.Popen("ifconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+			for word in det[0].split():
+				i = word.find("addr:")
+				if i!=-1 and len(word)>i+1:
+					details += (word[i:]+ " ")
 		except:
 			pass
+
 		try:
-			details += subprocess.Popen("iwconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+			det = subprocess.Popen("iwconfig", stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()
+			for word in det[0].split():
+				i = word.find("ESSID:")
+				if i !=-1:
+					details += (word[i:]+ " ")
+					break
 		except:
 			pass
 			
 		with open(self.network_details_save_url, "w") as f:
 			f.write(str(details).replace("\n", "<br>"))
+		return details
 		
 	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
 		while 1:
-			self.save_network_details()
+			net_details = self.save_network_details()
 			text = self.get_text()
+			if text.find("<net_details>")!=-1:
+				text = text.replace("<net_details>", net_details)
+				text = text.replace("addr:" ,"")
+				text = text.replace("127.0.0.1" ,"")
+			
 			splited_text = text.split()
 			letter_count=0
 			for i in range(len(splited_text)):
