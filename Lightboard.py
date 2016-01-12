@@ -114,10 +114,11 @@ class Lightboard:
 		elif code =="<net_details>":
 			pass # already executed in main loop
 
-	def get_text(self):		
+	def get_text(self):	
+		text=""	
 		try:
 			req = Request(self.url)
-			content = urllib2.urlopen(req).read()
+			content = urllib2.urlopen(req, timeout=5).read()
 			text_start_index = content.find(self.start_text_marker)+len(self.start_text_marker)
 			text_stop_index = content.find(self.stop_text_marker)
 			text = content[text_start_index:text_stop_index].replace('#', '<').replace('*', '>')
@@ -125,8 +126,8 @@ class Lightboard:
 				storage_file = open(self.message_file_address, "w")
 				storage_file.write(text)
 				storage_file.close()
-			else:
-				raise ValueError('Got empty text from webpage')
+			#else:
+				#raise ValueError('Got empty text from webpage')
 		except:
 			print "connection problem"
 			try:
@@ -166,9 +167,10 @@ class Lightboard:
 	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
 		while 1:
 			try:
-				net_details = self.save_network_details()
+				
 				text = self.get_text()
 				if text.find("<net_details>")!=-1:
+					net_details = self.save_network_details()
 					text = text.replace("<net_details>", net_details)
 					text = text.replace("addr:" ,"")
 					text = text.replace("127.0.0.1" ,"")
