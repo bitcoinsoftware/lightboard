@@ -1,6 +1,8 @@
 import serial
+import AlcatelWallboardSimulator
 import subprocess
 import time
+import getopt
 import urllib2
 from urllib2 import Request
 
@@ -21,8 +23,11 @@ class Lightboard:
 	start_text_marker = "STARTTEXT"
 	stop_text_marker  = "STOPTEXT"
 	
-	def __init__(self):
-		self.ser = serial.Serial(self.device_address, self.baud, timeout=self.timeout)
+	def __init__(self, simulation = False):
+		if simulation:
+			self.ser = AlcatelWallboardSimulator.AlcatellWalboardSimulator()
+		else:
+			self.ser = serial.Serial(self.device_address, self.baud, timeout=self.timeout)
 		self.clean()
 		
 	def clean(self):
@@ -158,38 +163,41 @@ class Lightboard:
 		
 	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
 		while 1:
-			net_details = self.save_network_details()
-			text = self.get_text()
-			if text.find("<net_details>")!=-1:
-				text = text.replace("<net_details>", net_details)
-				text = text.replace("addr:" ,"")
-				text = text.replace("127.0.0.1" ,"")
-			
-			splited_text = text.split()
-			letter_count=0
-			for i in range(len(splited_text)):
-				word = splited_text[i].strip()
-				if word in self.special_codes:
-					self._execute_special_code(word)
-				else:
-					if len(word)<=16:
-						if letter_count + len(word)>16:
-							self._change_row_and_screen()
-							letter_count=0
-						if letter_count + len(word)<=16:
-							letter_count += len(word)
-							self.write_word(word)
-							if letter_count < 16:
-								self.write_word(" ")
-								time.sleep(pause_beetween_words)
+			try:
+				net_details = self.save_network_details()
+				text = self.get_text()
+				if text.find("<net_details>")!=-1:
+					text = text.replace("<net_details>", net_details)
+					text = text.replace("addr:" ,"")
+					text = text.replace("127.0.0.1" ,"")
+				
+				splited_text = text.split()
+				letter_count=0
+				for i in range(len(splited_text)):
+					word = splited_text[i].strip()
+					if word in self.special_codes:
+						self._execute_special_code(word)
 					else:
-						splited_text.pop(i)
-						part1 = word[:14]+"-"
-						part2 = word[15:]
-						splited_text.insert(i, part1)
-						splited_text.insert(i, part2)
-						
-			self.clean()
+						if len(word)<=16:
+							if letter_count + len(word)>16:
+								self._change_row_and_screen()
+								letter_count=0
+							if letter_count + len(word)<=16:
+								letter_count += len(word)
+								self.write_word(word)
+								if letter_count < 16:
+									self.write_word(" ")
+									time.sleep(pause_beetween_words)
+						else:
+							splited_text.pop(i)
+							part1 = word[:14]+"-"
+							part2 = word[15:]
+							splited_text.insert(i, part1)
+							splited_text.insert(i, part2)
+							
+				self.clean()
+			except:
+				print "There was an error"
 
 if __name__ == "__main__":
 	l = Lightboard()
