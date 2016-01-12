@@ -156,9 +156,11 @@ class Lightboard:
 					break
 		except:
 			pass
-			
-		with open(self.network_details_save_url, "w") as f:
-			f.write(str(details).replace("\n", "<br>"))
+		try:	
+			with open(self.network_details_save_url, "w") as f:
+				f.write(str(details).replace("\n", "<br>"))
+		except:
+			pass
 		return details
 		
 	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
