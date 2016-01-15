@@ -210,33 +210,31 @@ class Lightboard:
 					pass
 					
 				text = self.get_text()
-				text.replace("&nbsp","")
+				text = text.replace("&nbsp;"," ")
 		
 				
 				splited_text = text.split()
-				letter_count=0
+				letter_count = 0
 				for i in range(len(splited_text)):
 					word = splited_text[i].strip()
 					if word in self.special_codes:
 						response = self._execute_special_code(word)
 						word = response[1].strip()
-						
-					if len(word)<=16:
-						if letter_count + len(word)>16:
-							self._change_row_and_screen()
-							letter_count=0
-						if letter_count + len(word)<=16:
-							letter_count += len(word)
-							self.write_word(word)
-							if letter_count < 16:
-								self.write_word(" ")
+					if len(word)>0:
+						if len(word)<=16:
+							if letter_count + len(word)>16:
+								self._change_row_and_screen()
+								letter_count=0
+							if letter_count + len(word) <=16:
+								letter_count += (len(word)+1)
+								self.write_word(word+" ")
 								time.sleep(pause_beetween_words)
-					else:
-						splited_text.pop(i)
-						part1 = word[:14]+"-"
-						part2 = word[15:]
-						splited_text.insert(i, part1)
-						splited_text.insert(i, part2)
+						else:
+							splited_text.pop(i)
+							part1 = word[:14]+"-"
+							part2 = word[15:]
+							splited_text.insert(i, part1)
+							splited_text.insert(i, part2)
 							
 				self.clean()
 			except:
