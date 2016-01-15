@@ -1,1 +1,1 @@
- <clean> <static> <red> PRAKTYCZNE ORAZ CIEKAWE <clean> PRACE DYPLOMOWE <green> <blink> NICE-IDEA.ORG <pause> <static> <clean> <red> Miejsce na inne informacje zwiazane z katedra <pause> <net_details> <pause> 
+ <static> T=1C P=1008hPa <time> <pause> <clean> <red> CIEKAWE <yellow> PRACE <green> DYPLOMOWE <orange> I&nbsp;PRAKTYKI <blink> <red> S.110 

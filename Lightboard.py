@@ -5,75 +5,93 @@ import time
 import getopt
 import urllib2
 from urllib2 import Request
-
+try:
+	from metar import Metar
+except:
+	pass
+	
 class Lightboard:
 	rows = 2
 	cols = 16
 	device_address = "/dev/ttyUSB0"
 	message_file_address = "/home/odroid/Desktop/lightboard/message.txt"
-	url = "http://nice-idea.org/index.php/tablica/"
+	url = "http://kmim.wm.pwr.edu.pl/tablica/"
+	#url = "http://nice-idea.org/index.php/tablica/"
+	metar_code = "EPWR 151730Z 01006KT 2500 -SN BR BKN005 01/M01 Q1008 R11/51//94"
 	network_details_save_url = "/var/www/index.html"
 	baud = 9600
 	timeout =1.0
 	pause_between_messages = 3.0
+	weather_obs = None
 	
 	_current_row = 0;
 	special_codes = ["<green>", "<red>", "<yellow>", "<orange>", "<light_red>", "<net_details>",
-					 "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>", "<pause>"]
+					 "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>", "<pause>",
+					 "<weather>", "<temperature>", "<pressure>"]
 	start_text_marker = "STARTTEXT"
 	stop_text_marker  = "STOPTEXT"
 	
 	def __init__(self, simulation = False):
+		self.simulate = simulation
 		if simulation:
-			self.ser = AlcatelWallboardSimulator.AlcatellWalboardSimulator()
+			#TODO self.ser = AlcatelWallboardSimulator.AlcatellWalboardSimulator()
+			pass
 		else:
-			self.ser = serial.Serial(self.device_address, self.baud, timeout=self.timeout)
+			try:
+				self.ser = serial.Serial(self.device_address, self.baud, timeout=self.timeout)
+			except:
+				print("Could not open serial ", self.device_address);
 		self.clean()
 		
 	def clean(self):
-		self.ser.write("\x8E")
+		self.write_word("\x8E")
 		
 	def beep(self):
-		self.ser.write("\x8D")
+		self.write_word("\x8D")
 		
 	def set_red_color(self):
-		self.ser.write("\x80")
+		self.write_word("\x80")
 		
 	def set_light_red_color():
-		self.ser.write("\x81")
+		self.write_word("\x81")
 		
 	def set_yellow_color(self):
-		self.ser.write("\x82")
+		self.write_word("\x82")
 		
 	def set_orange_color(self):
-		self.ser.write("\x83")
+		self.write_word("\x83")
 		
 	def set_green_color(self):
-		self.ser.write("\x87")
+		self.write_word("\x87")
 		
 	def set_bright_text(self):
-		self.ser.write("\x84")
+		self.write_word("\x84")
 		
 	def set_dimm_text(self):
-		self.ser.write("\x85")
+		self.write_word("\x85")
 		
 	def set_very_dim_text(self):
-		self.ser.write("\x86")
+		self.write_word("\x86")
 		
 	def go_to_first_row(self):
-		self.ser.write("\x89")
+		self.write_word("\x89")
 		
 	def go_to_second_row(self):
-		self.ser.write("\x8A")
+		self.write_word("\x8A")
 		
 	def set_blinking_text(self):
-		self.ser.write("\x8C")
+		self.write_word("\x8C")
 		
 	def set_static_text(self):
-		self.ser.write("\x8B")
+		self.write_word("\x8B")
 		
 	def write_word(self, word):
-		self.ser.write(word)
+		try:
+			self.ser.write(word)
+		except:
+			print("Serial error")
+		if self.simulate:
+			print(word)
 		
 	def _change_row_and_screen(self):
 		if self._current_row==0:
@@ -85,6 +103,7 @@ class Lightboard:
 			self._current_row=0
 			
 	def _execute_special_code(self, code):
+		response = [0,'']
 		if code=="<green>":
 			self.set_green_color()
 		elif code=="<red>":
@@ -100,10 +119,11 @@ class Lightboard:
 		elif code=="<static>":
 			self.set_static_text()
 		elif code=="<time>":
-			time_str =  time.strftime("%H:%M", time.gmtime())
-			self.write_word(time_str)
+			time_str =  time.strftime("%H:%M", time.localtime())
+			response = [1 , time_str]
 		elif code=="<date>":
-			date_str = time.strftime("%m-%d", time.gmtime())
+			date_str = time.strftime("%m-%d", time.localtime())
+			response = [1 , date_str]
 		elif code=="<endl>":
 			self._change_row_and_screen()
 		elif code =="<clean>":
@@ -112,7 +132,25 @@ class Lightboard:
 		elif code =="<pause>":
 			time.sleep(self.pause_between_messages)
 		elif code =="<net_details>":
-			pass # already executed in main loop
+			net_details = self.save_network_details()
+			text = text.replace("<net_details>", net_details)
+			text = text.replace("addr:" ,"")
+			text = text.replace("127.0.0.1" ,"")
+			response = [1 , text]
+		elif code =="<weather>":
+			if self.weather_obs:
+				text = self.weather_obs.present_weather()
+				response = [1, text]
+		elif code =="<pressure>":
+			if self.weather_obs:
+				text = self.press.string("mb")
+				response = [1,text]
+		elif code =="<temperature>":
+			if self.weather_obs:
+				text = self.weather_obs.temp.string("C")
+				response = [1,text]
+		return response
+			
 
 	def get_text(self):	
 		text=""	
@@ -126,8 +164,6 @@ class Lightboard:
 				storage_file = open(self.message_file_address, "w")
 				storage_file.write(text)
 				storage_file.close()
-			#else:
-				#raise ValueError('Got empty text from webpage')
 		except:
 			print "connection problem"
 			try:
@@ -164,48 +200,51 @@ class Lightboard:
 			pass
 		return details
 		
-	def write_dynamic_text (self,  pause_beetween_words = 0.9, print_to_stdout = False):
+	def write_dynamic_text (self,  pause_beetween_words = 0.9):
 		while 1:
 			try:
-				
+				#GET WEATHER
+				try:
+					self.weather_obs = Metar.Metar(code)
+				except:
+					pass
+					
 				text = self.get_text()
-				if text.find("<net_details>")!=-1:
-					net_details = self.save_network_details()
-					text = text.replace("<net_details>", net_details)
-					text = text.replace("addr:" ,"")
-					text = text.replace("127.0.0.1" ,"")
+		
 				
 				splited_text = text.split()
 				letter_count=0
 				for i in range(len(splited_text)):
 					word = splited_text[i].strip()
 					if word in self.special_codes:
-						self._execute_special_code(word)
+						response = self._execute_special_code(word)
+						if response[0]:
+							word = response[1]
+						
+					if len(word)<=16:
+						if letter_count + len(word)>16:
+							self._change_row_and_screen()
+							letter_count=0
+						if letter_count + len(word)<=16:
+							letter_count += len(word)
+							self.write_word(word)
+							if letter_count < 16:
+								self.write_word(" ")
+								time.sleep(pause_beetween_words)
 					else:
-						if len(word)<=16:
-							if letter_count + len(word)>16:
-								self._change_row_and_screen()
-								letter_count=0
-							if letter_count + len(word)<=16:
-								letter_count += len(word)
-								self.write_word(word)
-								if letter_count < 16:
-									self.write_word(" ")
-									time.sleep(pause_beetween_words)
-						else:
-							splited_text.pop(i)
-							part1 = word[:14]+"-"
-							part2 = word[15:]
-							splited_text.insert(i, part1)
-							splited_text.insert(i, part2)
+						splited_text.pop(i)
+						part1 = word[:14]+"-"
+						part2 = word[15:]
+						splited_text.insert(i, part1)
+						splited_text.insert(i, part2)
 							
 				self.clean()
 			except:
 				print "There was an error"
 
 if __name__ == "__main__":
-	l = Lightboard()
-	l.write_dynamic_text(print_to_stdout = True)
+	l = Lightboard(True)
+	l.write_dynamic_text()
 					
 										
 		
