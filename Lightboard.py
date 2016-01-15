@@ -218,8 +218,7 @@ class Lightboard:
 					word = splited_text[i].strip()
 					if word in self.special_codes:
 						response = self._execute_special_code(word)
-						if response[0]:
-							word = response[1]
+						word = response[1]
 						
 					if len(word)<=16:
 						if letter_count + len(word)>16:
@@ -243,7 +242,7 @@ class Lightboard:
 				print "There was an error"
 
 if __name__ == "__main__":
-	l = Lightboard(True)
+	l = Lightboard(False)
 	l.write_dynamic_text()
 					
 										
