@@ -210,6 +210,7 @@ class Lightboard:
 					pass
 					
 				text = self.get_text()
+				text.replace("&nbsp","")
 		
 				
 				splited_text = text.split()
@@ -218,7 +219,7 @@ class Lightboard:
 					word = splited_text[i].strip()
 					if word in self.special_codes:
 						response = self._execute_special_code(word)
-						word = response[1]
+						word = response[1].strip()
 						
 					if len(word)<=16:
 						if letter_count + len(word)>16:
