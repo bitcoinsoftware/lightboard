@@ -200,7 +200,9 @@ class Lightboard:
 			pass
 		return details
 		
-	def write_dynamic_text (self,  pause_beetween_words = 0.9):
+	def write_dynamic_text (self,  pause_beetween_words = 0.9, get_text_each_N_iteration =10):
+		splited_text = []
+		iteration = 0
 		while 1:
 			try:
 				#GET WEATHER
@@ -208,12 +210,12 @@ class Lightboard:
 					self.weather_obs = Metar.Metar(code)
 				except:
 					pass
+				if iteration == get_text_each_N_iteration:
+					text = self.get_text()
+					text = text.replace("&nbsp;"," ")
+					splited_text = text.split()
+					iteration = 0
 					
-				text = self.get_text()
-				text = text.replace("&nbsp;"," ")
-		
-				
-				splited_text = text.split()
 				letter_count = 0
 				for i in range(len(splited_text)):
 					word = splited_text[i].strip()
@@ -237,6 +239,7 @@ class Lightboard:
 							splited_text.insert(i, part2)
 							
 				self.clean()
+				iteration += 1
 			except:
 				print "There was an error"
 
