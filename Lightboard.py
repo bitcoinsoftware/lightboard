@@ -159,7 +159,7 @@ class Lightboard:
 			content = urllib2.urlopen(req, timeout=5).read()
 			text_start_index = content.find(self.start_text_marker)+len(self.start_text_marker)
 			text_stop_index = content.find(self.stop_text_marker)
-			text = content[text_start_index:text_stop_index].replace('#', '<').replace('*', '>')
+			text = content[text_start_index:text_stop_index].replace('#', ' <').replace('*', '> ').replace("\n", "")
 			if len(text)>0:
 				storage_file = open(self.message_file_address, "w")
 				storage_file.write(text)
@@ -212,8 +212,8 @@ class Lightboard:
 					pass
 				if iteration == get_text_each_N_iteration:
 					text = self.get_text()
-					text = text.replace("&nbsp;"," ")
-					splited_text = text.split()
+					text = text.replace("&nbsp;",' ')
+					splited_text = text.split(' ')
 					iteration = 0
 					
 				letter_count = 0
@@ -232,6 +232,7 @@ class Lightboard:
 								self.write_word(word+" ")
 								time.sleep(pause_beetween_words)
 						else:
+							print word, len(word)
 							splited_text.pop(i)
 							part1 = word[:14]+"-"
 							part2 = word[15:]
