@@ -1,1 +1,1 @@
- <static> T=1C P=1008hPa <time> <pause> <clean> <red> CIEKAWE <yellow> PRACE <green> DYPLOMOWE <orange> I&nbsp;PRAKTYKI <blink> <red> S.110 
+<date> <time> <endl> <pause> <temperature> <pressure> <weather> <clean> Konkurs: Wykonaj test zabezpieczen tablicy i wygraj niespodzianke ;-) <pause>

@@ -150,7 +150,10 @@ class Lightboard:
 				text = self.weather_obs.temp.string("C")
 				response = [1,text]
 		return response
-			
+	
+	def get_message_file_content(self):
+		f = open(self.message_file_address)
+		return f.read()
 
 	def get_text(self):	
 		text=""	
@@ -159,18 +162,21 @@ class Lightboard:
 			content = urllib2.urlopen(req, timeout=5).read()
 			text_start_index = content.find(self.start_text_marker)+len(self.start_text_marker)
 			text_stop_index = content.find(self.stop_text_marker)
-			text = content[text_start_index:text_stop_index].replace('#', ' <').replace('*', '> ').replace("\n", "")
-			if len(text)>0:
-				storage_file = open(self.message_file_address, "w")
-				storage_file.write(text)
-				storage_file.close()
+			if text_stop_index ==-1:
+				text += "Blad: Niepoprawna tresc www! "
+				text += self.get_message_file_content()
+			else: 
+				text = content[text_start_index:text_stop_index].replace('#', ' <').replace('*', '> ').replace("\n", "")
+				#if len(text)>0:
+				#	storage_file = open(self.message_file_address, "w")
+				#	storage_file.write(text)
+				#	storage_file.close()
 		except:
-			print "connection problem"
 			try:
-				f = open(self.message_file_address)
-				text = f.read()
+				text += "Brak polaczenia z www "
+				text += self.get_message_file_content()
 			except:
-				text = "could not read file"
+				text = "Blad: Brak polacznia i odczytu z dysku"
 		return text
 		
 	def save_network_details(self):
