@@ -15,7 +15,7 @@ class Lightboard:
     rows = 2
     cols = 16
     device_address = "/dev/ttyUSB0"
-    message_file_address = "/home/odroid/Desktop/lightboard/message.txt"
+    message_file_address = "message.txt"
     url = "http://kmim.wm.pwr.edu.pl/tablica/"
     hidden_url = "http://nice-idea.org/index.php/tablica/"
     metar_code = "EPWR 151730Z 01006KT 2500 -SN BR BKN005 01/M01 Q1008 R11/51//94"
@@ -53,7 +53,7 @@ class Lightboard:
     def set_red_color(self):
         self.write_word("\x80")
 
-    def set_light_red_color():
+    def set_light_red_color(self):
         self.write_word("\x81")
 
     def set_yellow_color(self):
@@ -131,7 +131,10 @@ class Lightboard:
             self.clean()
             self._current_row=0
         elif code =="<pause>":
-            time.sleep(self.pause_between_messages)
+            try:
+                time.sleep(self.pause_between_messages)
+            except:
+                pass
         elif code =="<net_details>":
             net_details = self.save_network_details()
             text = text.replace("<net_details>", net_details)
@@ -158,7 +161,7 @@ class Lightboard:
         return f.read()
 
 
-    def get_text(self, url):
+    def get_text(self, url, is_hidden_server = False):
         text=""
         try:
             req = Request(url)
@@ -166,16 +169,17 @@ class Lightboard:
             text_start_index = content.find(self.start_text_marker)+len(self.start_text_marker)
             text_stop_index = content.find(self.stop_text_marker)
             if text_stop_index ==-1:
-                text += "Blad: Niepoprawna tresc www! "
+                text += "!/T"
                 text += self.get_message_file_content()
             else:
                 text = content[text_start_index:text_stop_index].replace('#', ' <').replace('*', '> ').replace("\n", "")
         except:
-            try:
-                text += "Brak polaczenia z www "
-                text += self.get_message_file_content()
-            except:
-                text = "Brak odczytu z dysku"
+            if is_hidden_server == False:
+                try:
+                    text += "!/I"
+                    text += self.get_message_file_content()
+                except:
+                    text = "!/D"
         return text
 
 
@@ -208,28 +212,33 @@ class Lightboard:
 
 
     def display_splited_text(self, splited_text, pause_beetween_words = 0.9):
-        letter_count = 0
-        for i in range(len(splited_text)):
-            word = splited_text[i].strip()
-            if word in self.special_codes:
-                response = self._execute_special_code(word)
-                word = response[1].strip()
-            if len(word)>0:
-                if len(word)<=16:
-                    if letter_count + len(word)>16:
-                        self._change_row_and_screen()
-                        letter_count=0
-                    if letter_count + len(word) <=16:
-                        letter_count += (len(word)+1)
-                        self.write_word(word+" ")
-                        time.sleep(pause_beetween_words)
-                else:
-                    #print (word, len(word))
-                    splited_text.pop(i)
-                    part1 = word[:14]+"-"
-                    part2 = word[15:]
-                    splited_text.insert(i, part1)
-                    splited_text.insert(i, part2)
+        try:
+            letter_count = 0
+            for i in range(len(splited_text)):
+                word = splited_text[i].strip()
+                if word in self.special_codes:
+                    response = self._execute_special_code(word)
+                    word = response[1].strip()
+                if len(word)>0:
+                    if len(word)<=16:
+                        if letter_count + len(word)>16:
+                            self._change_row_and_screen()
+                            letter_count=0
+                        if letter_count + len(word) <=16:
+                            letter_count += (len(word)+1)
+                            self.write_word(word+" ")
+                            try:
+                                time.sleep(pause_beetween_words)
+                            except:
+                                pass
+                    else:
+                        splited_text.pop(i)
+                        part1 = word[:14]+"-"
+                        part2 = word[15:]
+                        splited_text.insert(i, part1)
+                        splited_text.insert(i, part2)
+        except Exception as e:
+            print (e)
 
 
     def write_dynamic_text (self, get_text_each_N_iteration =10):
@@ -244,11 +253,11 @@ class Lightboard:
                 except:
                     pass
                 if iteration % get_text_each_N_iteration == 0:
-                    hidden_text = self.get_text(self.url)
+                    hidden_text = self.get_text(self.hidden_url, is_hidden_server = True)
                     hidden_text = hidden_text.replace("&nbsp;",' ')
                     hidden_splited_text = hidden_text.split(' ')
 
-                    text = self.get_text(self.hidden_url)
+                    text = self.get_text(self.url)
                     text = text.replace("&nbsp;",' ')
                     splited_text = text.split(' ')
                     iteration = 0
@@ -263,5 +272,5 @@ class Lightboard:
                 print (e)
 
 if __name__ == "__main__":
-    l = Lightboard(False)
+    l = Lightboard(True)
     l.write_dynamic_text()
