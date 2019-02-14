@@ -1,1 +1,1 @@
-<date> <time> <endl> <pause> <temperature> <pressure> <weather> <clean> Konkurs: Wykonaj test zabezpieczen tablicy i wygraj niespodzianke ;-) <pause>
+<clean> Ciekawe tematy dyplomowe, staze i praktyki. <blink> S.110 <pause> <clean> <green> Mechanika <red> Robotyka <yellow> Chemia <orange> Fizyka <light_red> Informatyka
