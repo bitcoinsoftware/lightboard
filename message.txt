@@ -1,1 +1,1 @@
-<clean> Ciekawe tematy dyplomowe, staze i praktyki. <blink> S.110 <pause> <clean> <green> Mechanika <red> Robotyka <yellow> Chemia <orange> Fizyka <light_red> Informatyka
+<clean> Ciekawe tematy dyplomowe, staze, praktyki, projekty. <blink> S.110 <pause> <clean> <green> Technika <red> Nauka <yellow> Przemysl <orange> Ekonomia
