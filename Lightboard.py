@@ -27,7 +27,7 @@ class Lightboard:
     _current_row = 0;
     special_codes = ["<green>", "<red>", "<yellow>", "<orange>", "<light_red>", "<net_details>",
                      "<date>", "<endl>", "<time>", "<blink>", "<static>", "<clean>", "<pause>",
-                     "<weather>", "<temperature>", "<pressure>"]
+                     "<weather>", "<temperature>", "<pressure>", "<br>"]
     start_text_marker = "STARTTEXT"
     stop_text_marker  = "STOPTEXT"
     start_command_marker = "STARTCOMMAND"
@@ -142,18 +142,24 @@ class Lightboard:
             text = text.replace("addr:" ,"")
             text = text.replace("127.0.0.1" ,"")
             response = [1 , text]
-        elif code =="<weather>":
-            if self.weather_obs:
-                text = self.weather_obs.present_weather()
-                response = [1, text]
-        elif code =="<pressure>":
-            if self.weather_obs:
-                text = self.press.string("mb")
-                response = [1,text]
-        elif code =="<temperature>":
-            if self.weather_obs:
-                text = self.weather_obs.temp.string("C")
-                response = [1,text]
+        elif code in ["<weather>", "<pressure>", "<temperature>"]:
+            try:
+                self.weather_obs = Metar.Metar(code)
+                if code =="<weather>":
+                    if self.weather_obs:
+                        text = self.weather_obs.present_weather()
+                        response = [1, text]
+                elif code =="<pressure>":
+                    if self.weather_obs:
+                        text = self.press.string("mb")
+                        response = [1,text]
+                elif code =="<temperature>":
+                    if self.weather_obs:
+                        text = self.weather_obs.temp.string("C")
+                        response = [1,text]
+            except Exception as e:
+                print (e)
+
         return response
 
 
@@ -187,8 +193,6 @@ class Lightboard:
                     if is_hidden_server == False:
                         text = "D! " #COULDN'T READ FROM THE DISK
                     print (e)
-
-
         return text
 
 
@@ -269,11 +273,6 @@ class Lightboard:
         splited_text,hidden_splited_text = [] , []
         iteration = 0
         while 1:
-            #GET WEATHERtime
-            try:
-                self.weather_obs = Metar.Metar(code)
-            except Exception as e:
-                print (e)
             if iteration % get_text_each_N_iteration == 0:
                 iteration = 0
                 #hidden server
